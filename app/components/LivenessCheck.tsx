@@ -143,6 +143,10 @@ export default function LivenessCheck({
   });
   const mounted = useRef(true);
   const [isReadyToCapture, setIsReadyToCapture] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const videoConstraints = {
     width: 320,

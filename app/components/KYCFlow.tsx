@@ -26,6 +26,15 @@ enum Step {
 interface KYCFlowProps {
   token: string | null;
   id: string | null;
+  onComplete: (data: KYCDocument) => void;
+  onCancel: () => void;
+}
+
+interface KYCDocument {
+  id: string;
+  type: string;
+  status: string;
+  data: Record<string, unknown>;
 }
 
 interface VerificationState {
@@ -36,7 +45,12 @@ interface VerificationState {
   errorDetails?: any;
 }
 
-export default function KYCFlow({ token, id }: KYCFlowProps) {
+export default function KYCFlow({
+  token,
+  id,
+  onComplete,
+  onCancel,
+}: KYCFlowProps) {
   const [state, setState] = useState<VerificationState>({
     step: Step.Loading,
     userData: null,

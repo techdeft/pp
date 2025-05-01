@@ -130,10 +130,12 @@ export default function IDScan({
         ) : (
           <>
             <div className="bg-gray-100 rounded-xl p-3 mb-4 overflow-hidden border border-green-500">
-              <img
+              <Image
                 src={idImage}
                 alt="ID Document"
                 className="rounded-lg w-full"
+                width={420}
+                height={280}
               />
             </div>
             <button

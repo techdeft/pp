@@ -26,7 +26,6 @@ export interface PageParams {
 
 export interface VerificationResult {
   success: boolean;
-  message: string;
-  data?: any;
+  data: Record<string, unknown>;
   error?: string;
 }

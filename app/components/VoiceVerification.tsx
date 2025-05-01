@@ -23,6 +23,13 @@ export default function VoiceVerification({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+    }
+  };
+
   // Clean up audio URL when component unmounts
   useEffect(() => {
     return () => {
@@ -34,20 +41,15 @@ export default function VoiceVerification({
 
   // Handle countdown timer for recording
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    if (recording && countDown > 0) {
-      intervalId = setInterval(() => {
-        setCountDown((prev) => prev - 1);
-      }, 1000);
-    } else if (recording && countDown === 0) {
-      stopRecording();
+    if (recording) {
+      const timer = setTimeout(() => {
+        if (recording) {
+          stopRecording();
+        }
+      }, 5000);
+      return () => clearTimeout(timer);
     }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [recording, countDown]);
+  }, [recording, stopRecording]);
 
   const startRecording = async () => {
     try {
@@ -99,13 +101,6 @@ export default function VoiceVerification({
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && recording) {
-      mediaRecorderRef.current.stop();
-      setRecording(false);
-    }
-  };
-
   const handleRerecord = () => {
     setAudioURL(null);
     setAudioBase64(null);
@@ -122,8 +117,12 @@ export default function VoiceVerification({
       <h2 className="text-2xl font-bold mb-6 text-center">
         Voice Verification
       </h2>
-      <p className="mb-4 text-gray-700 text-center">
-        Please say the following phrase clearly:
+      <p className="text-sm text-gray-600 mb-4">
+        Please read the following phrase aloud: &quot;My voice is my
+        password&quot;
+      </p>
+      <p className="text-sm text-gray-600 mb-4">
+        Make sure you&apos;re in a quiet environment and speak clearly.
       </p>
       <p className="text-lg font-medium text-center mb-6 p-3 bg-blue-50 rounded-lg">
         "My name is {userName}"
