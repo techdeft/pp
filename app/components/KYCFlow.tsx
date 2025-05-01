@@ -33,6 +33,7 @@ interface VerificationState {
   userData: UserData | null;
   error: string | null;
   verificationResult: VerificationResult | null;
+  errorDetails?: any;
 }
 
 export default function KYCFlow({ token, id }: KYCFlowProps) {
@@ -95,8 +96,8 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
         setState((prev) => ({
           ...prev,
           userData: data,
-          formData: { ...formData, name: data.name },
         }));
+        setFormData((prev) => ({ ...prev, name: data.name }));
 
         if (data.haskyc) {
           setState((prev) => ({ ...prev, step: Step.AlreadyVerified }));
