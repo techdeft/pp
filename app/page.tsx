@@ -1,25 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { KYCFormData, IDType, UserData } from "./types";
-import { confirmKYC, submitKYC } from "./utils";
-import UserInfoForm from "./components/UserInfoForm";
-import LivenessCheck from "./components/LivenessCheck";
-import IDScan from "./components/IDScan";
-import QRCodeDisplay from "./components/QRCodeDisplay";
-import VerificationSuccess from "./components/VerificationSuccess";
 import dynamic from "next/dynamic";
-
-enum Step {
-  Loading,
-  UserInfo,
-  LivenessCheck,
-  IDScan,
-  Success,
-  AlreadyVerified,
-  Error,
-}
 
 // Client-only component with no SSR to prevent hydration mismatch
 const KYCFlow = dynamic(() => import("./components/KYCFlow"), {

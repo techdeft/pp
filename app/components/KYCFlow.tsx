@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { KYCFormData, IDType, UserData } from "../types";
+import { KYCFormData, IDType, UserData, VerificationResult } from "../types";
 import { isMobileDevice, confirmKYC, submitKYC } from "../utils";
 import WelcomeScreen from "./WelcomeScreen";
 import UserInfoForm from "./UserInfoForm";
@@ -28,11 +28,20 @@ interface KYCFlowProps {
   id: string | null;
 }
 
+interface VerificationState {
+  step: Step;
+  userData: UserData | null;
+  error: string | null;
+  verificationResult: VerificationResult | null;
+}
+
 export default function KYCFlow({ token, id }: KYCFlowProps) {
-  const [step, setStep] = useState<Step>(Step.Loading);
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [errorDetails, setErrorDetails] = useState<any>(null);
+  const [state, setState] = useState<VerificationState>({
+    step: Step.Loading,
+    userData: null,
+    error: null,
+    verificationResult: null,
+  });
   const [formData, setFormData] = useState<KYCFormData>({
     name: "",
     idType: "" as IDType,
@@ -60,14 +69,20 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
   useEffect(() => {
     const fetchUserData = async () => {
       if (!token) {
-        setError("Missing token parameter");
-        setStep(Step.Error);
+        setState((prev) => ({
+          ...prev,
+          error: "Missing token parameter",
+          step: Step.Error,
+        }));
         return;
       }
 
       if (!id) {
-        setError("Missing ID parameter");
-        setStep(Step.Error);
+        setState((prev) => ({
+          ...prev,
+          error: "Missing ID parameter",
+          step: Step.Error,
+        }));
         return;
       }
 
@@ -77,13 +92,16 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
         const data = await confirmKYC(token);
         console.log("API response:", data);
 
-        setUserData(data);
-        setFormData((prev) => ({ ...prev, name: data.name }));
+        setState((prev) => ({
+          ...prev,
+          userData: data,
+          formData: { ...formData, name: data.name },
+        }));
 
         if (data.haskyc) {
-          setStep(Step.AlreadyVerified);
+          setState((prev) => ({ ...prev, step: Step.AlreadyVerified }));
         } else {
-          setStep(Step.Welcome);
+          setState((prev) => ({ ...prev, step: Step.Welcome }));
         }
       } catch (err: any) {
         console.error("Error fetching user data:", err);
@@ -102,7 +120,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
             errorMsg = "Authentication failed. Please check your token.";
           }
 
-          setErrorDetails(err.response);
+          setState((prev) => ({ ...prev, errorDetails: err.response }));
         } else if (err.request) {
           // The request was made but no response was received
           console.error("Error request:", err.request);
@@ -114,8 +132,8 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
           errorMsg = `Error: ${err.message}`;
         }
 
-        setError(errorMsg);
-        setStep(Step.Error);
+        setState((prev) => ({ ...prev, error: errorMsg }));
+        setState((prev) => ({ ...prev, step: Step.Error }));
       }
     };
 
@@ -141,11 +159,11 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
   };
 
   const nextStep = () => {
-    setStep((prev) => prev + 1);
+    setState((prev) => ({ ...prev, step: prev.step + 1 }));
   };
 
   const prevStep = () => {
-    setStep((prev) => prev - 1);
+    setState((prev) => ({ ...prev, step: prev.step - 1 }));
   };
 
   const handleSubmit = async () => {
@@ -163,7 +181,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
       // Ensure token is a string
       const authToken = token.toString();
       await submitKYC(authToken, formData);
-      setStep(Step.Success);
+      setState((prev) => ({ ...prev, step: Step.Success }));
     } catch (err: any) {
       console.error("Error submitting KYC:", err);
 
@@ -178,7 +196,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
           errorMsg = "Authentication failed. Your session may have expired.";
         }
 
-        setErrorDetails(err.response);
+        setState((prev) => ({ ...prev, errorDetails: err.response }));
       } else if (err.request) {
         errorMsg =
           "No response received from server. Please check your connection.";
@@ -186,8 +204,8 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
         errorMsg = `Error: ${err.message}`;
       }
 
-      setError(errorMsg);
-      setStep(Step.Error);
+      setState((prev) => ({ ...prev, error: errorMsg }));
+      setState((prev) => ({ ...prev, step: Step.Error }));
     } finally {
       setIsSubmitting(false);
     }
@@ -203,7 +221,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
   }
 
   // Loading state
-  if (step === Step.Loading) {
+  if (state.step === Step.Loading) {
     return (
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -216,7 +234,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
   }
 
   // Error state
-  if (step === Step.Error) {
+  if (state.step === Step.Error) {
     return (
       <div className="max-w-md w-full mx-auto p-6 bg-white rounded-xl shadow-md text-center">
         <div className="mb-6 text-red-500">
@@ -237,15 +255,15 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
         </div>
         <h2 className="text-2xl font-bold mb-4">Error</h2>
         <p className="mb-6 text-gray-700">
-          {error || "An unexpected error occurred"}
+          {state.error || "An unexpected error occurred"}
         </p>
 
         {/* Debug information */}
-        {errorDetails && (
+        {state.errorDetails && (
           <div className="mt-4 p-4 bg-gray-100 rounded-xl text-left text-xs overflow-auto max-h-60">
-            <p className="font-semibold">Status: {errorDetails.status}</p>
+            <p className="font-semibold">Status: {state.errorDetails.status}</p>
             <p className="font-semibold mt-2">Response:</p>
-            <pre>{JSON.stringify(errorDetails.data, null, 2)}</pre>
+            <pre>{JSON.stringify(state.errorDetails.data, null, 2)}</pre>
             <p className="font-semibold mt-2">Token Preview:</p>
             <p>{token ? `${token.substring(0, 20)}...` : "None"}</p>
           </div>
@@ -262,7 +280,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
   }
 
   // Already verified state
-  if (step === Step.AlreadyVerified && userData) {
+  if (state.step === Step.AlreadyVerified && state.userData) {
     return (
       <div className="max-w-md w-full mx-auto p-6 bg-white rounded-xl shadow-md text-center">
         <div className="mb-6 text-green-500">
@@ -281,7 +299,9 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold mb-4">Hello, {userData.name}</h2>
+        <h2 className="text-2xl font-bold mb-4">
+          Hello, {state.userData.name}
+        </h2>
         <p className="mb-6 text-gray-700">
           You are already verified. No further action is needed.
         </p>
@@ -290,8 +310,8 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
   }
 
   // Welcome state
-  if (step === Step.Welcome && userData) {
-    return <WelcomeScreen userData={userData} onNext={nextStep} />;
+  if (state.step === Step.Welcome && state.userData) {
+    return <WelcomeScreen userData={state.userData} onNext={nextStep} />;
   }
 
   // Desktop users - show QR code
@@ -303,7 +323,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
   // Mobile users - show KYC steps
   return (
     <div>
-      {step === Step.UserInfo && (
+      {state.step === Step.UserInfo && (
         <UserInfoForm
           formData={formData}
           onFormChange={handleFormChange}
@@ -311,7 +331,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
         />
       )}
 
-      {step === Step.LivenessCheck && (
+      {state.step === Step.LivenessCheck && (
         <LivenessCheck
           onCapture={handleSelfieCapture}
           onNextStep={nextStep}
@@ -319,7 +339,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
         />
       )}
 
-      {step === Step.IDScan && (
+      {state.step === Step.IDScan && (
         <IDScan
           onCapture={handleIDCapture}
           onSubmit={nextStep}
@@ -327,7 +347,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
         />
       )}
 
-      {step === Step.VoiceVerification && (
+      {state.step === Step.VoiceVerification && (
         <VoiceVerification
           userName={formData.name}
           onCapture={handleVoiceCapture}
@@ -336,7 +356,7 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
         />
       )}
 
-      {step === Step.Success && <VerificationSuccess />}
+      {state.step === Step.Success && <VerificationSuccess />}
 
       {isSubmitting && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

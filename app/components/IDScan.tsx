@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import Webcam from "react-webcam";
+import Image from "next/image";
 
 interface IDScanProps {
   onCapture: (base64Image: string) => void;
@@ -64,8 +65,9 @@ export default function IDScan({
   return (
     <div className="max-w-md w-full mx-auto p-6 bg-white rounded-2xl">
       <h2 className="text-2xl font-bold mb-6 text-center">ID Document Scan</h2>
-      <p className="mb-4 text-gray-700 text-center">
-        Please position your ID document in the frame and take a clear photo.
+      <p className="text-sm text-gray-600 mb-4">
+        Please ensure your ID is clearly visible and well-lit. Avoid glare and
+        shadows.
       </p>
 
       <div className="flex flex-col items-center justify-center">
@@ -156,6 +158,14 @@ export default function IDScan({
           Back
         </button>
       </div>
+
+      <Image
+        src="/file.svg"
+        alt="ID Upload"
+        width={64}
+        height={64}
+        className="mb-4"
+      />
     </div>
   );
 }
