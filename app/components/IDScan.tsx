@@ -8,6 +8,12 @@ interface IDScanProps {
   onPrevStep: () => void;
 }
 
+interface VideoConstraints {
+  width: number;
+  height: number;
+  facingMode: "user" | "environment";
+}
+
 export default function IDScan({
   onCapture,
   onSubmit,
@@ -55,7 +61,7 @@ export default function IDScan({
   };
 
   // More flexible video constraints
-  const videoConstraints = {
+  const videoConstraints: VideoConstraints = {
     width: 420,
     height: 280,
     facingMode: useFrontCamera ? "user" : "environment", // Less strict constraint
@@ -135,6 +141,7 @@ export default function IDScan({
                 className="rounded-lg w-full"
                 width={420}
                 height={280}
+                unoptimized
               />
             </div>
             <button

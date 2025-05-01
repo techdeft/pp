@@ -35,12 +35,17 @@ interface KYCDocument {
   data: Record<string, unknown>;
 }
 
+interface ErrorResponse {
+  status: number;
+  data: Record<string, unknown>;
+}
+
 interface VerificationState {
   step: Step;
   userData: UserData | null;
   error: string | null;
   verificationResult: VerificationResult | null;
-  errorDetails?: Record<string, unknown>;
+  errorDetails?: ErrorResponse;
 }
 
 export default function KYCFlow({ token, id }: KYCFlowProps) {
@@ -161,34 +166,38 @@ export default function KYCFlow({ token, id }: KYCFlowProps) {
 
     setIsSubmitting(true);
     try {
-      // Ensure token is a string
       const authToken = token.toString();
       await submitKYC(authToken, formData);
       setState((prev) => ({ ...prev, step: Step.Success }));
-    } catch (err: any) {
-      console.error("Error submitting KYC:", err);
-
+    } catch (error: unknown) {
+      console.error("Error submitting KYC:", error);
       let errorMsg = "Failed to submit verification. Please try again later.";
 
-      // Extract detailed error information
-      if (err.response) {
-        console.error("Error response data:", err.response.data);
-        console.error("Error response status:", err.response.status);
+      if (error && typeof error === "object") {
+        const err = error as {
+          response?: ErrorResponse;
+          request?: unknown;
+          message?: string;
+        };
 
-        if (err.response.status === 401) {
-          errorMsg = "Authentication failed. Your session may have expired.";
+        if (err.response) {
+          console.error("Error response data:", err.response.data);
+          console.error("Error response status:", err.response.status);
+
+          if (err.response.status === 401) {
+            errorMsg = "Authentication failed. Your session may have expired.";
+          }
+
+          setState((prev) => ({ ...prev, errorDetails: err.response }));
+        } else if (err.request) {
+          errorMsg =
+            "No response received from server. Please check your connection.";
+        } else if (err.message) {
+          errorMsg = `Error: ${err.message}`;
         }
-
-        setState((prev) => ({ ...prev, errorDetails: err.response }));
-      } else if (err.request) {
-        errorMsg =
-          "No response received from server. Please check your connection.";
-      } else {
-        errorMsg = `Error: ${err.message}`;
       }
 
-      setState((prev) => ({ ...prev, error: errorMsg }));
-      setState((prev) => ({ ...prev, step: Step.Error }));
+      setState((prev) => ({ ...prev, error: errorMsg, step: Step.Error }));
     } finally {
       setIsSubmitting(false);
     }
