@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Webcam from "react-webcam";
 import * as faceapi from "face-api.js/dist/face-api.min.js";
 import { checkEnvironmentBrightness } from "../utils";
-import type { Point } from "face-api.js/dist/face-api.min.js";
+import Image from "next/image";
 
 interface LivenessCheckProps {
   onCapture: (base64Image: string) => void;
@@ -441,10 +441,12 @@ export default function LivenessCheck({
           <>
             <div className="relative">
               <div className="relative bg-gray-100 rounded-full p-3 mb-4 overflow-hidden border-4 border-green-500">
-                <img
+                <Image
                   src={capturedImage}
                   alt="Captured selfie"
                   className="rounded-full w-full"
+                  width={320}
+                  height={320}
                 />
               </div>
             </div>

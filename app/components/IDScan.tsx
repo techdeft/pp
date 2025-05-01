@@ -15,7 +15,6 @@ export default function IDScan({
 }: IDScanProps) {
   const [idImage, setIdImage] = useState<string | null>(null);
   const webcamRef = useRef<Webcam>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [useFrontCamera, setUseFrontCamera] = useState(false);
 
@@ -113,9 +112,9 @@ export default function IDScan({
             <button
               onClick={capture}
               className="mb-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-              disabled={isLoading || !!cameraError}
+              disabled={!!cameraError}
             >
-              {isLoading ? "Processing..." : "Capture ID Photo"}
+              Capture ID Photo
             </button>
 
             {cameraError && (

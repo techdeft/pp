@@ -26,8 +26,6 @@ enum Step {
 interface KYCFlowProps {
   token: string | null;
   id: string | null;
-  onComplete: (data: KYCDocument) => void;
-  onCancel: () => void;
 }
 
 interface KYCDocument {
@@ -42,15 +40,10 @@ interface VerificationState {
   userData: UserData | null;
   error: string | null;
   verificationResult: VerificationResult | null;
-  errorDetails?: any;
+  errorDetails?: Record<string, unknown>;
 }
 
-export default function KYCFlow({
-  token,
-  id,
-  onComplete,
-  onCancel,
-}: KYCFlowProps) {
+export default function KYCFlow({ token, id }: KYCFlowProps) {
   const [state, setState] = useState<VerificationState>({
     step: Step.Loading,
     userData: null,
@@ -101,12 +94,8 @@ export default function KYCFlow({
         return;
       }
 
-      console.log("Fetching user data with token:", token);
-
       try {
         const data = await confirmKYC(token);
-        console.log("API response:", data);
-
         setState((prev) => ({
           ...prev,
           userData: data,
@@ -118,33 +107,12 @@ export default function KYCFlow({
         } else {
           setState((prev) => ({ ...prev, step: Step.Welcome }));
         }
-      } catch (err: any) {
-        console.error("Error fetching user data:", err);
-
+      } catch (error: unknown) {
+        console.error("Error fetching user data:", error);
         let errorMsg = "Failed to fetch user data. Please try again later.";
 
-        // Extract detailed error information
-        if (err.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          console.error("Error response data:", err.response.data);
-          console.error("Error response status:", err.response.status);
-          console.error("Error response headers:", err.response.headers);
-
-          if (err.response.status === 401) {
-            errorMsg = "Authentication failed. Please check your token.";
-          }
-
-          setState((prev) => ({ ...prev, errorDetails: err.response }));
-        } else if (err.request) {
-          // The request was made but no response was received
-          console.error("Error request:", err.request);
-          errorMsg =
-            "No response received from server. Please check your connection.";
-        } else {
-          // Something happened in setting up the request that triggered an Error
-          console.error("Error message:", err.message);
-          errorMsg = `Error: ${err.message}`;
+        if (error instanceof Error) {
+          errorMsg = error.message;
         }
 
         setState((prev) => ({ ...prev, error: errorMsg }));
@@ -152,10 +120,10 @@ export default function KYCFlow({
       }
     };
 
-    if (token && mounted) {
+    if (token) {
       fetchUserData();
     }
-  }, [token, id, mounted]);
+  }, [token, id]);
 
   const handleFormChange = (name: string, value: string | IDType) => {
     setFormData((prev) => ({ ...prev, [name]: value }));

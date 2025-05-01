@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 interface VoiceVerificationProps {
   userName: string;
@@ -23,12 +23,12 @@ export default function VoiceVerification({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  const stopRecording = () => {
+  const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && recording) {
       mediaRecorderRef.current.stop();
       setRecording(false);
     }
-  };
+  }, [recording]);
 
   // Clean up audio URL when component unmounts
   useEffect(() => {
@@ -125,7 +125,7 @@ export default function VoiceVerification({
         Make sure you&apos;re in a quiet environment and speak clearly.
       </p>
       <p className="text-lg font-medium text-center mb-6 p-3 bg-blue-50 rounded-lg">
-        "My name is {userName}"
+        &quot;My name is {userName}&quot;
       </p>
 
       <div className="flex flex-col items-center justify-center">

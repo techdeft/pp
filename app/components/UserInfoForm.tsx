@@ -71,7 +71,7 @@ export default function UserInfoForm({
           >
             <option value="">Select ID Type</option>
             <option value="National ID">National ID</option>
-            <option value="Driver's License">Driver's License</option>
+            <option value="Driver's License">Driver&apos;s License</option>
             <option value="Passport">Passport</option>
             <option value="Other">Other</option>
           </select>
