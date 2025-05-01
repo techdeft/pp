@@ -158,14 +158,6 @@ export default function IDScan({
           Back
         </button>
       </div>
-
-      <Image
-        src="/file.svg"
-        alt="ID Upload"
-        width={64}
-        height={64}
-        className="mb-4"
-      />
     </div>
   );
 }
