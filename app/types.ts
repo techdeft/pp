@@ -23,3 +23,10 @@ export interface PageParams {
   token: string;
   id: string;
 }
+
+export interface VerificationResult {
+  success: boolean;
+  message: string;
+  data?: any;
+  error?: string;
+}
